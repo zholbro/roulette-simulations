@@ -41,43 +41,15 @@ class RouletteNode:
 			self.parents.append(partner)
 			partner.children.append(self)
 
-		# if self is partner or len(self.parents) >= k:
-		# 	return
-		# if len(partner.children) >= partner.k:
-		# 	# for i in range (0, k-1):
-		# 	# 	rouletteJoin(self, partner.children[i], 1)
-		# 	for i in partner.children:
-		# 		print('giving ' + self.id + ' to ' + i.id)
-		# 		self.rouletteJoin(i, 1)
-		# if k == 1:
-		# 	if len(partner.children) >= partner.k:
-		# 		i = random.randint(0, len(partner.children) - 1)
-		# 		self.rouletteJoin(partner.children[i], k)
-		# 	else:
-		# 		self.parents.append(partner)
-		# 		partner.children.append(self)
-		# else:
-		# 	self.parents.append(partner)
-		# 	partner.children.append(self)
-		# 	# for i in range (0, partner.children.length - 1):
-		# 	# 	rouletteJoin(self, partner.children[i], 1)
-		# 	for i in partner.children:
-		# 		self.rouletteJoin(i, 1)
-
 	def transmit(self):
 		threading.Timer(1/30, self.transmit).start()
 		self.counter['InternalCounter'] += 1
 		self.counter['ExternalCounter'] += 1
-		# for i in range(0, self.children.length - 1):
 		if len(self.children) > 0:
 			for i in self.children:
 				failure = random.uniform(1, 100)
-				# modelling TCP failure at about 5%
 				if failure > 5:
-					# self.children[i].counter['ExternalCounter'] = self.counter['InternalCounter']
 					i.counter['ExternalCounter'] = self.counter['InternalCounter']
-				# else:
-					# print('PACKET LOSS FROM ' + self.id + ' TO ' + i.id)
 
 	def retransmit(self):
 		threading.Timer(1/30, self.retransmit).start()
@@ -85,27 +57,17 @@ class RouletteNode:
 		ext = self.counter['ExternalCounter']
 
 		if ext > internal and self.children > 0:
-			# print('node ' + self.id + ' going from frame ' + str(internal) + ' to ' + str(ext))
 			if (ext - internal) > 1:
-				# print('Jump by ' + str(ext-internal) + 'frames')
 				jumpData.append(ext - internal)
 				jumpCounter[str(ext-internal)] += 1
-				# print 'JUMP IN FRAMES FROM ' + str(internal) + ' TO ' + str(ext)
-			# if (ext - internal) > 10:
-				# print('SEVERE PACKET DROPPED FOR NODE ' + self.id)
-			#time for rebroadcast
+
 			self.counter['InternalCounter'] = ext
-			# for i in range(0, self.children.length - 1):
-			# 	failure = random.uniform(0, 100)
-			# 	if failure > 5:
-			# 		self.children[i].counter['ExternalCounter'] = internal
 			for i in self.children:
 				failure = random.uniform(1,100)
 				#this shit here is where some race conditions are about to happen probably
 				if failure > 5 and i.counter['ExternalCounter'] < ext:
 					# increase of the counter needs to be monotonic
 					i.counter['ExternalCounter'] = ext
-		# print(self.id + ' is at ' + str(ext))
 
 	def overlayRadiusMeasure(self, partner, radius):
 		if partner.isRoot:
