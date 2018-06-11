@@ -1,3 +1,5 @@
+from __future__ import division
+
 from collections import Counter
 import random
 import threading
@@ -108,23 +110,72 @@ def main():
 	d.retransmit()
 	e.retransmit()
 	root.transmit()
+	nodesWhoFail = []
 
-	for i in range(1, 20):
+	for i in range(1, 95):
 		newNode = RouletteNode(False, 2)
 		newNode.rouletteJoin(root, newNode.k)
+		nodesWhoFail.append(newNode)
 		newNode.retransmit()
 
+	childCount = 0
+	for i in nodesWhoFail:
+		childCount += len(i.parents)
+	childCount /= len(nodesWhoFail)
+
+	print('Before failure, average parent count is ' + str(childCount))
+	childCount = 0 
+
+	amtFail = 45
+	failureRounds = 2
+
+	for rounds in range(0, failureRounds):
+		print('round' + str(rounds))
+		for i in range(1, amtFail):
+			dyingNode = random.choice(nodesWhoFail)
+			for j in dyingNode.parents:
+
+				j.children.remove(dyingNode)
+
+			for k in dyingNode.children:
+				k.parents.remove(dyingNode)
+			nodesWhoFail.remove(dyingNode)
+
+		# for i in nodesWhoFail:
+		# 	childCount += len(i.parents)
+		# childCount /= len(nodesWhoFail)
+		# print('After failure, average parent count is ' + str(childCount))
+
+		for i in range(1, amtFail):
+			newNode = RouletteNode(False, 2)
+			newNode.rouletteJoin(root, newNode.k)
+			nodesWhoFail.append(newNode)
+			newNode.retransmit()
+
+	childCount = 0
+	for i in nodesWhoFail:
+		childCount += len(i.parents)
+	childCount /= len(nodesWhoFail)
+	print('After repairs, average parent count is ' + str(childCount))
+
+	sys.exit()
+
 	print('gimme a bit')
-	time.sleep(30)
+	time.sleep(60)
 	print(jumpCounter)
-	h = sorted(jumpData)
-	fit = stats.norm.pdf(h, np.mean(h), np.std(h))
+	# h = sorted(jumpData)
+	# fit = stats.norm.pdf(h, np.mean(h), np.std(h))
 	# plt.plot(h, fit, '-o')
 	# plt.hist(h, normed=True)
 	# plt.show()
 	# sys.exit()
-	plt.hist(jumpData, bins='auto')
-	plt.title('Distribution of frame misses in Roulette With Unreliable Network and Reliable Nodes, n = 20, p = 0.05')
+	plt.hist(jumpData, bins=range(2,max(jumpData)), density=False)
+	plt.title('Consecutive frame misses in Roulette With Unreliable Network and Reliable Nodes')
+	# plt.text(60, 0.025, r'n = 25,\ p = 0.05'))
+	plt.text(5, 1000, r'n = 100, p = 0.05, t = 60')
+	plt.xlabel('Consecutive frame misses')
+	plt.ylabel('Instances')
+	plt.yscale('log')
 	plt.show()
 
 if __name__ == "__main__":
